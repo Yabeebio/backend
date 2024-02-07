@@ -49,6 +49,33 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage })
 
+// Documentation swagger
+// const swaggerJsDoc = require('swagger-jsdoc');
+// const swaggerUI = require('swagger-ui-express');
+
+// const swaggerOptions = {
+//     swaggerDefinition: {
+//         info: {
+//             title: "Backen API Documentation",
+//             version: "1.0",
+//         }
+//     },
+//     apis: ["app.js"]
+// }
+
+// const swaggerDocs = swaggerJsDoc(swaggerOptions);
+// console.log(swaggerDocs);
+
+// app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
+
+const swaggerUI = require('swagger-ui-express');
+const swaggerDocs = require('./swagger-output.json');
+
+console.log(swaggerDocs);
+
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
+
+
 //Models :
 var Contact = require('./models/Contact');
 
@@ -155,6 +182,28 @@ app.get('/newblog', function (req, res) {
 });
 
 //Ajout d'un blog
+
+/**
+ * @swagger
+ * /addblog:
+ *      post:
+ *          description: add blogs
+ *          parameters:
+ *              - titre: title
+ *                description: title of the blog
+ *                in: formData
+ *                required: false
+ *                type: String
+ *              - soustitre: subtitle
+ *                description: subtitle of the blog
+ *                in: formData
+ *                required: false
+ *                type: String
+ *          responses:
+ *              201:
+ *                  description: Created
+ */
+
 app.post('/addblog', upload.single('image'), function (req, res) {
     const Data = new Blog({
         titre: req.body.titre,
@@ -169,17 +218,28 @@ app.post('/addblog', upload.single('image'), function (req, res) {
         res.status(400).json("No file uploaded")
     }
     else { */
-        Data.save()
-            .then(() => {
-                console.log("Blog saved");
-                res.status(201).json({"result" : "Blog saved successfully"})
-                // res.redirect('process.env.FRONTEND_URLallblogs')
-            })
-            .catch(err => console.error(err));
+    Data.save()
+        .then(() => {
+            console.log("Blog saved");
+            res.status(201).json({ "result": "Blog saved successfully" })
+            // res.redirect('process.env.FRONTEND_URLallblogs')
+        })
+        .catch(err => console.error(err));
     /* } */
 });
 
 //recuperation de les blogs
+
+/**
+ * @swagger
+ * /allblogs:
+ *      get:
+ *          description: get all blogs
+ *          responses:
+ *              200:
+ *                  description: Success
+ */
+
 app.get('/allblogs', function (req, res) {
     Blog.find()
         .then((data) => {
@@ -195,7 +255,7 @@ app.get('/blog/:id', function (req, res) {
             res.json(data);
         })
         .catch((error) => {
-            res.status(404).json({error:error});
+            res.status(404).json({ error: error });
         })
 });
 
