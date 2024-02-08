@@ -49,6 +49,77 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage })
 
+// Toobusy -> SECURITY
+// Anti Ddos
+const toobusy = require('toobusy-js');
+
+app.use(function(req, res, next) {
+    if(toobusy()){
+        res.status(503).send("Server too busy")
+    }
+    else{
+        next();
+    }
+})
+// SGV Captcha
+const session = require('express-session');
+const svgCaptcha = require('svg-captcha');
+
+app.use(
+    session({
+        secret: "Mysecretkey", // Identifie de facon unique la session
+        resave: false,
+        saveUninitialized: true
+    })
+)
+
+app.get('/captcha', (req, res, next) => {
+    const options = {
+        size: 6,
+        noise: 4,
+        color: true
+    }
+    const captcha = svgCaptcha.create(options); // Genere l'image
+
+    req.session.captcha = captcha.text; // On stock le text obtenu dans la session
+    res.type('svg');
+    res.status(200).send(captcha.data);
+})
+
+app.get('/formCaptcha', (req, res) => {
+    res.render('Captcha')
+});
+
+app.post('/verify', (req, res) => {
+    const {userInput} = req.body;
+
+    if(userInput === req.session.captcha){
+        res.status(200).send('You are not a robot')
+    }
+    else{
+        res.status(400).send('Mr. Robot ???')
+    }
+})
+
+// HPP - Polution des paramètres HTTP
+
+const hpp = require('hpp');
+
+app.use(hpp());                                                                                             // Si problème avec cyclic et vercel enlever HPP et HELMET
+
+// Helmet : Modification des entetes HTTP
+
+const helmet = require('helmet');
+
+app.use(helmet());
+
+// No cache : Cache control : Eviter que les données soient stockées en cache
+
+const nocache = require('nocache');
+
+app.use(nocache());
+
+
 // Documentation swagger
 // const swaggerJsDoc = require('swagger-jsdoc');
 // const swaggerUI = require('swagger-ui-express');
@@ -74,6 +145,7 @@ const swaggerDocs = require('./swagger-output.json');
 console.log(swaggerDocs);
 
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
+
 
 
 //Models :
